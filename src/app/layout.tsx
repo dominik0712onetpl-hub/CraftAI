@@ -7,8 +7,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Vorn — Real-time Translation Earbuds",
-  description: "Wireless earbuds with instant AI translation across 40+ languages. Under 0.5s latency.",
+  title: "Vorn — Real-time Voice Translation Earbuds",
+  description: "Wireless earbuds with real-time AI voice translation. Under 0.5 s latency, 40+ languages, ANC, IPX5, USB-C. Free worldwide shipping.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

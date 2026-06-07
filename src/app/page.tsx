@@ -10,10 +10,12 @@ import {
 } from "framer-motion";
 import { translations, detectLang, type Lang, type T } from "@/lib/translations";
 import { PurchasePanel } from "@/components/purchase-panel";
+import { TestimonialsSection } from "@/components/testimonials-section";
+import { FaqSection } from "@/components/faq-section";
+import { StickyBar } from "@/components/sticky-bar";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/* ─── scroll-driven scene ─── */
 function Scene({
   progress,
   range,
@@ -36,7 +38,6 @@ function Scene({
   );
 }
 
-/* ─── language switcher ─── */
 const LANGS: { id: Lang; label: string }[] = [
   { id: "en", label: "EN" },
   { id: "pl", label: "PL" },
@@ -61,7 +62,6 @@ export default function Home() {
 
   const t: T = translations[lang];
 
-  /* scroll-driven video */
   const sectionRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const { scrollYProgress } = useScroll({
@@ -69,8 +69,6 @@ export default function Home() {
     offset: ["start start", "end end"],
   });
 
-  /* Unlock video for programmatic seeking — browsers block currentTime
-     until the video has been started at least once.                    */
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -79,11 +77,8 @@ export default function Home() {
         .then(() => { v.pause(); v.currentTime = 0; })
         .catch(() => {});
     };
-    if (v.readyState >= 2) {
-      unlock();
-    } else {
-      v.addEventListener("loadeddata", unlock, { once: true });
-    }
+    if (v.readyState >= 2) unlock();
+    else v.addEventListener("loadeddata", unlock, { once: true });
   }, []);
 
   useMotionValueEvent(scrollYProgress, "change", (p) => {
@@ -110,25 +105,20 @@ export default function Home() {
         <span className="text-white text-[13px] font-bold tracking-[0.1em] uppercase select-none drop-shadow-sm">
           vorn
         </span>
-
         <div className="flex items-center gap-2">
-          {/* Language switcher */}
           <div className="flex items-center bg-white/10 backdrop-blur-md rounded-full px-1 py-1 gap-0.5">
             {LANGS.map(({ id, label }) => (
               <button
                 key={id}
                 onClick={() => changeLang(id)}
                 className={`text-[10px] font-semibold tracking-wide px-2.5 py-1 rounded-full transition-all duration-200 ${
-                  lang === id
-                    ? "bg-white text-black"
-                    : "text-white/70 hover:text-white"
+                  lang === id ? "bg-white text-black" : "text-white/70 hover:text-white"
                 }`}
               >
                 {label}
               </button>
             ))}
           </div>
-
           <a
             href="#order"
             className="text-[11px] font-semibold text-white border border-white/30 rounded-full px-5 py-2 hover:bg-white hover:text-black transition-all duration-200 tracking-wide"
@@ -138,10 +128,9 @@ export default function Home() {
         </div>
       </motion.nav>
 
-      {/* ── VIDEO SECTION (scroll-driven) ── */}
+      {/* ── VIDEO SECTION ── */}
       <div ref={sectionRef} style={{ height: "400vh" }} className="relative">
         <div className="sticky top-0 h-screen overflow-hidden">
-          {/* video */}
           <video
             ref={videoRef}
             src="/hero.mp4"
@@ -150,7 +139,6 @@ export default function Home() {
             preload="auto"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          {/* overlays */}
           <div className="absolute inset-0 bg-black/52" />
           <div
             className="absolute inset-0 pointer-events-none"
@@ -160,7 +148,7 @@ export default function Home() {
             }}
           />
 
-          {/* ── SCENE 0 — Hero ── */}
+          {/* Scene 0 — Hero */}
           <Scene progress={scrollYProgress} range={[0, 0.01, 0.18, 0.24]}>
             <div className="text-center text-white max-w-2xl">
               <motion.p
@@ -202,7 +190,7 @@ export default function Home() {
             </div>
           </Scene>
 
-          {/* ── SCENES 1–3 ── */}
+          {/* Scenes 1–3 */}
           {t.scenes.map((s, i) => {
             const ranges: [number, number, number, number][] = [
               [0.23, 0.30, 0.44, 0.50],
@@ -242,7 +230,6 @@ export default function Home() {
             <span className="text-[9px] tracking-[0.18em] uppercase text-white/25">{t.hero.scroll}</span>
           </motion.div>
 
-          {/* progress bar */}
           <motion.div
             className="absolute bottom-0 left-0 right-0 h-[1.5px] bg-white/40 origin-left"
             style={{ scaleX: barScaleX }}
@@ -262,7 +249,6 @@ export default function Home() {
           >
             {t.how.title}
           </motion.p>
-
           <div className="grid md:grid-cols-3 gap-10 mt-10">
             {t.how.steps.map((step, i) => (
               <motion.div
@@ -281,6 +267,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── TESTIMONIALS ── */}
+      <TestimonialsSection t={t} />
+
       {/* ── SPECS ── */}
       <section className="py-24 px-7 bg-black text-white">
         <div className="max-w-4xl mx-auto">
@@ -293,7 +282,6 @@ export default function Home() {
           >
             {t.specs.title}
           </motion.h2>
-
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -316,14 +304,33 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
+      <FaqSection t={t} />
+
       {/* ── PURCHASE ── */}
       <PurchasePanel t={t} lang={lang} />
 
       {/* ── FOOTER ── */}
-      <footer className="px-7 py-6 border-t border-black/8 flex items-center justify-between">
-        <span className="text-[12px] font-bold tracking-[0.1em] uppercase">vorn</span>
-        <span className="text-[11px] text-black/30">{t.footer.copy}</span>
+      <footer className="px-7 py-8 border-t border-black/8">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <span className="text-[12px] font-bold tracking-[0.1em] uppercase">vorn</span>
+          <div className="flex items-center gap-5">
+            <a href="/terms" className="text-[11px] text-black/40 hover:text-black transition-colors">
+              {t.footer.terms}
+            </a>
+            <a href="/privacy" className="text-[11px] text-black/40 hover:text-black transition-colors">
+              {t.footer.privacy}
+            </a>
+            <a href="mailto:hello@vorn.co" className="text-[11px] text-black/40 hover:text-black transition-colors">
+              {t.footer.contact}
+            </a>
+          </div>
+          <span className="text-[11px] text-black/30">{t.footer.copy}</span>
+        </div>
       </footer>
+
+      {/* ── STICKY MOBILE BAR ── */}
+      <StickyBar t={t} lang={lang} />
 
     </div>
   );

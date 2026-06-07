@@ -7,21 +7,55 @@ import { PaymentModal } from "@/components/payment-modal";
 
 type State = "idle" | "loading" | "modal" | "success";
 
+function TrustBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1.5 text-center">
+      <span className="text-black/40">{icon}</span>
+      <span className="text-[10px] text-zinc-500 leading-tight">{label}</span>
+    </div>
+  );
+}
+
+const IconReturns = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" />
+  </svg>
+);
+const IconShield = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+const IconTruck = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3" /><rect x="9" y="11" width="14" height="10" rx="2" /><circle cx="12" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+  </svg>
+);
+const IconLock = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </svg>
+);
+
 export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
   const p = t.purchase;
   const pricing = PRICING[lang];
 
-  const [variantId, setVariantId] = useState<"standard" | "pro">("standard");
   const [colorId, setColorId] = useState(p.colors[0].id);
   const [qty, setQty] = useState(1);
   const [state, setState] = useState<State>("idle");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [agreed, setAgreed] = useState(false);
 
-  const variantPrice = pricing[variantId];
-  const total = variantPrice * qty;
+  const total = pricing.price * qty;
+  const color = p.colors.find((c) => c.id === colorId)!;
 
   const handleOrder = async () => {
+    if (!agreed) {
+      setApiError(p.legal.agree + " " + p.legal.terms + " " + p.legal.and + " " + p.legal.privacy + ".");
+      return;
+    }
     setState("loading");
     setApiError(null);
     try {
@@ -29,11 +63,11 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          variantId,
+          variantId: "standard",
           colorId,
           qty,
           currency: pricing.currency,
-          unitAmount: variantPrice * 100,
+          unitAmount: pricing.price * 100,
         }),
       });
       const data = await res.json();
@@ -41,16 +75,14 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
         setClientSecret(data.clientSecret);
         setState("modal");
       } else {
-        setApiError(data.error ?? "Błąd serwera");
+        setApiError(data.error ?? "Server error");
         setState("idle");
       }
     } catch (e) {
-      setApiError(e instanceof Error ? e.message : "Brak połączenia");
+      setApiError(e instanceof Error ? e.message : "Connection error");
       setState("idle");
     }
   };
-
-  const color = p.colors.find((c) => c.id === colorId)!;
 
   return (
     <>
@@ -79,7 +111,7 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                 <h3 className="text-3xl font-black mb-3">{p.success.h}</h3>
                 <p className="text-zinc-500 max-w-sm mx-auto leading-relaxed mb-8">{p.success.b}</p>
                 <button
-                  onClick={() => { setState("idle"); setQty(1); }}
+                  onClick={() => { setState("idle"); setQty(1); setAgreed(false); }}
                   className="text-sm font-medium text-black/50 hover:text-black transition-colors underline underline-offset-4"
                 >
                   {p.success.again}
@@ -100,32 +132,17 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                   <h2 className="text-4xl font-black mb-1">{p.title}</h2>
                   <p className="text-sm text-zinc-500 mb-8">{p.sub}</p>
 
-                  {/* Variants */}
-                  <div className="space-y-3 mb-8">
-                    {p.variants.map((v) => {
-                      const vPrice = pricing[v.id as "standard" | "pro"];
-                      return (
-                        <button
-                          key={v.id}
-                          onClick={() => setVariantId(v.id as "standard" | "pro")}
-                          className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all duration-200 ${
-                            variantId === v.id
-                              ? "border-black bg-white"
-                              : "border-transparent bg-white/60 hover:bg-white"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-sm">{v.name}</span>
-                            <span className="font-black text-base">{formatPrice(vPrice, lang)}</span>
-                          </div>
-                          <p className="text-xs text-zinc-400 mt-0.5">{v.desc}</p>
-                        </button>
-                      );
-                    })}
+                  {/* Price */}
+                  <div className="bg-white rounded-2xl px-5 py-4 mb-8 flex items-center justify-between border-2 border-black">
+                    <div>
+                      <p className="font-semibold text-sm">Vorn</p>
+                      <p className="text-xs text-zinc-400 mt-0.5">Bluetooth 5.4 · ANC · IPX5 · USB-C</p>
+                    </div>
+                    <p className="font-black text-xl">{formatPrice(pricing.price, lang)}</p>
                   </div>
 
                   {/* Color */}
-                  <div className="mb-6">
+                  <div>
                     <p className="text-xs font-medium text-zinc-500 mb-3">{color.name}</p>
                     <div className="flex gap-3">
                       {p.colors.map((c) => (
@@ -176,6 +193,31 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                     </motion.span>
                   </div>
 
+                  {/* GDPR checkbox */}
+                  <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+                    <div className="relative mt-0.5">
+                      <input
+                        type="checkbox"
+                        checked={agreed}
+                        onChange={(e) => { setAgreed(e.target.checked); if (e.target.checked) setApiError(null); }}
+                        className="sr-only"
+                      />
+                      <div className={`w-4 h-4 rounded border transition-all ${agreed ? "bg-black border-black" : "border-black/25 bg-white group-hover:border-black/50"}`}>
+                        {agreed && (
+                          <svg className="w-full h-full text-white p-0.5" fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l3.5 3.5L13 5" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                    <span className="text-[11px] text-zinc-400 leading-relaxed">
+                      {p.legal.agree}{" "}
+                      <a href="/terms" className="underline underline-offset-2 hover:text-black transition-colors">{p.legal.terms}</a>
+                      {" "}{p.legal.and}{" "}
+                      <a href="/privacy" className="underline underline-offset-2 hover:text-black transition-colors">{p.legal.privacy}</a>.
+                    </span>
+                  </label>
+
                   {/* Error */}
                   <AnimatePresence>
                     {apiError && (
@@ -183,7 +225,7 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                         initial={{ opacity: 0, y: -4 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="text-xs text-red-500 mb-3"
+                        className="text-xs text-red-500 mb-3 leading-relaxed"
                       >
                         {apiError}
                       </motion.p>
@@ -219,6 +261,14 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                       )}
                     </AnimatePresence>
                   </motion.button>
+
+                  {/* Trust badges */}
+                  <div className="grid grid-cols-4 gap-2 mt-6 pt-6 border-t border-black/8">
+                    <TrustBadge icon={<IconReturns />} label={p.trust.returns} />
+                    <TrustBadge icon={<IconShield />}  label={p.trust.warranty} />
+                    <TrustBadge icon={<IconTruck />}   label={p.trust.shipping} />
+                    <TrustBadge icon={<IconLock />}    label={p.trust.secure} />
+                  </div>
                 </div>
               </motion.div>
             )}
