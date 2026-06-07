@@ -16,12 +16,14 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
   const [qty, setQty] = useState(1);
   const [state, setState] = useState<State>("idle");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const variantPrice = pricing[variantId];
   const total = variantPrice * qty;
 
   const handleOrder = async () => {
     setState("loading");
+    setApiError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -39,9 +41,11 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
         setClientSecret(data.clientSecret);
         setState("modal");
       } else {
+        setApiError(data.error ?? "Błąd serwera");
         setState("idle");
       }
-    } catch {
+    } catch (e) {
+      setApiError(e instanceof Error ? e.message : "Brak połączenia");
       setState("idle");
     }
   };
@@ -171,6 +175,20 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                       {formatPrice(total, lang)}
                     </motion.span>
                   </div>
+
+                  {/* Error */}
+                  <AnimatePresence>
+                    {apiError && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="text-xs text-red-500 mb-3"
+                      >
+                        {apiError}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
 
                   {/* Buy button */}
                   <motion.button
