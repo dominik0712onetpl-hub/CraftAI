@@ -165,7 +165,7 @@ const de: typeof en = {
   nav: { brand: "vorn", buy: "Jetzt bestellen" },
   hero: {
     tag: "Echtzeit-Übersetzung",
-    h1: "Die Welt hören\nin deiner Sprache.",
+    h1: "Hör die Welt\nin deiner Sprache.",
     sub: "Kabellose Ohrhörer mit sofortiger KI-Übersetzung in über 40 Sprachen. Entwickelt für Reisen, Business und Alltag.",
     cta: "Jetzt bestellen",
     scroll: "Scrollen",
