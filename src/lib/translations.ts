@@ -99,6 +99,12 @@ const en = {
       again: "Place another order",
     },
   },
+  modal: {
+    title: "Complete order",
+    pay: "Pay",
+    processing: "Processing…",
+    error: "Payment failed. Try again.",
+  },
   footer: { copy: "© 2026 Vorn. All rights reserved." },
 };
 
@@ -173,6 +179,12 @@ const pl: typeof en = {
       b: "W wersji produkcyjnej otrzymasz potwierdzenie zamówienia e-mailem. Dziękujemy za wypróbowanie Vorn.",
       again: "Złóż kolejne zamówienie",
     },
+  },
+  modal: {
+    title: "Finalizuj zamówienie",
+    pay: "Zapłać",
+    processing: "Przetwarzanie…",
+    error: "Płatność nie powiodła się. Spróbuj ponownie.",
   },
   footer: { copy: "© 2026 Vorn. Wszelkie prawa zastrzeżone." },
 };
@@ -249,6 +261,12 @@ const de: typeof en = {
       again: "Weitere Bestellung aufgeben",
     },
   },
+  modal: {
+    title: "Bestellung abschließen",
+    pay: "Bezahlen",
+    processing: "Verarbeitung…",
+    error: "Zahlung fehlgeschlagen. Erneut versuchen.",
+  },
   footer: { copy: "© 2026 Vorn. Alle Rechte vorbehalten." },
 };
 
@@ -323,6 +341,12 @@ const no: typeof en = {
       b: "I produksjon ville du mottatt en ordrebekreftelse på e-post. Takk for at du prøver Vorn.",
       again: "Legg inn en ny bestilling",
     },
+  },
+  modal: {
+    title: "Fullfør bestilling",
+    pay: "Betal",
+    processing: "Behandler…",
+    error: "Betaling mislyktes. Prøv igjen.",
   },
   footer: { copy: "© 2026 Vorn. Alle rettigheter forbeholdt." },
 };
