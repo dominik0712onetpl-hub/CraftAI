@@ -171,7 +171,7 @@ export default function Home() {
               >
                 {t.hero.tag}
               </motion.p>
-              <div className="overflow-hidden pb-[0.25em]">
+              <div className="overflow-hidden pb-[0.6em]">
                 <motion.h1
                   initial={{ y: "100%" }}
                   animate={{ y: 0 }}
