@@ -1,207 +1,205 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  useMotionValueEvent,
+  type MotionValue,
+} from "framer-motion";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+/* ─── scroll-driven section ─── */
+function Scene({
+  progress,
+  range,
+  children,
+}: {
+  progress: MotionValue<number>;
+  range: [number, number, number, number];
+  children: React.ReactNode;
+}) {
+  const [i0, i1, o0, o1] = range;
+  const opacity = useTransform(progress, [i0, i1, o0, o1], [0, 1, 1, 0]);
+  const y = useTransform(progress, [i0, Math.min(i1, o0)], [48, 0]);
+  return (
+    <motion.div
+      style={{ opacity, y }}
+      className="absolute inset-0 flex items-center justify-center px-8 pointer-events-none"
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 export default function Home() {
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const titleY = useTransform(scrollYProgress, [0, 1], [0, -120]);
-  const titleOpacity = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const { scrollYProgress } = useScroll({ target: containerRef });
+
+  /* drive video currentTime with scroll */
+  useMotionValueEvent(scrollYProgress, "change", (p) => {
+    const v = videoRef.current;
+    if (!v || !v.duration || isNaN(v.duration)) return;
+    v.currentTime = p * v.duration;
+  });
+
+  /* progress bar width */
+  const barScaleX = useTransform(scrollYProgress, [0, 1], [0, 1]);
+
+  /* scroll hint fade */
+  const hintOpacity = useTransform(scrollYProgress, [0, 0.06], [1, 0]);
 
   return (
-    <div className="min-h-screen bg-[#f9f9f7] text-black overflow-x-hidden">
+    <div ref={containerRef} style={{ height: "600vh" }} className="relative">
+
+      {/* ── FIXED VIDEO BACKGROUND ── */}
+      <div className="fixed inset-0 z-0">
+        <video
+          ref={videoRef}
+          src="/hero.mp4"
+          muted
+          playsInline
+          preload="auto"
+          className="w-full h-full object-cover"
+        />
+        {/* layered overlay: solid top + bottom vignette */}
+        <div className="absolute inset-0 bg-black/55" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.7) 100%)",
+          }}
+        />
+      </div>
 
       {/* ── NAV ── */}
       <motion.nav
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-7 py-4 bg-[#f9f9f7]/80 backdrop-blur-md"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        className="fixed top-0 inset-x-0 z-50 flex items-center justify-between px-8 py-5"
       >
-        <span className="text-[13px] font-semibold tracking-[0.08em] uppercase">vorn</span>
-        <div className="flex items-center gap-2">
-          <button className="text-[11px] font-medium border border-black/15 rounded-full px-4 py-[7px] hover:bg-black hover:text-white transition-all duration-200 tracking-wide">
-            Talk with Vorn ↗
-          </button>
-          <button className="text-[11px] font-medium bg-black text-white rounded-full px-4 py-[7px] hover:bg-zinc-700 transition-all duration-200 tracking-wide">
-            Menu
-          </button>
-        </div>
+        <span className="text-white text-[13px] font-semibold tracking-[0.1em] uppercase select-none">
+          vorn
+        </span>
+        <button className="text-[11px] font-medium text-white border border-white/25 rounded-full px-5 py-2 hover:bg-white hover:text-black transition-all duration-200 tracking-wide">
+          Get started
+        </button>
       </motion.nav>
 
-      {/* ── HERO ── */}
-      <section ref={heroRef} className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20">
+      {/* ── SCENES ── */}
+      <div className="fixed inset-0 z-10">
 
-        {/* ambient glow */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.85 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 2, ease: "easeOut" }}
-          className="absolute top-[-10%] right-[-8%] w-[55vw] h-[55vw] rounded-full pointer-events-none"
-          style={{
-            background: "radial-gradient(circle, rgba(180,180,255,0.18) 0%, rgba(220,220,255,0.07) 50%, transparent 70%)",
-          }}
-        />
-
-        <motion.div style={{ y: titleY, opacity: titleOpacity }} className="relative">
-
-          {/* oversized brand name */}
-          <div className="overflow-hidden">
+        {/* 0 — Hero */}
+        <Scene progress={scrollYProgress} range={[0, 0.01, 0.17, 0.23]}>
+          <div className="text-center text-white">
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.5 }}
+              className="text-[11px] tracking-[0.22em] uppercase text-white/40 mb-5"
+            >
+              Introducing
+            </motion.p>
             <motion.h1
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              transition={{ duration: 0.95, ease }}
-              className="font-black leading-[0.82] tracking-[-0.04em] whitespace-nowrap pl-7 select-none"
-              style={{ fontSize: "clamp(72px, 21vw, 300px)" }}
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="font-black leading-[0.83] tracking-[-0.04em] select-none"
+              style={{ fontSize: "clamp(88px, 19vw, 260px)" }}
             >
               vorn
             </motion.h1>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+              className="mt-6 text-[1.1rem] font-light text-white/55 tracking-wide"
+            >
+              Your craft becomes our intelligence.
+            </motion.p>
           </div>
+        </Scene>
 
-          {/* tagline */}
-          <motion.p
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.7, ease }}
-            className="pl-8 mt-5 text-[1.25rem] font-medium leading-[1.4] text-zinc-600 max-w-[260px]"
-          >
-            Your craft becomes<br />our intelligence.
-          </motion.p>
+        {/* 1 — Craft */}
+        <Scene progress={scrollYProgress} range={[0.22, 0.28, 0.42, 0.48]}>
+          <div className="max-w-xl text-white">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-white/35 mb-4">01 / Craft</p>
+            <h2 className="text-[clamp(36px,6vw,72px)] font-black leading-[1.0] tracking-tight">
+              Design<br />without limits.
+            </h2>
+            <p className="mt-5 text-[1.05rem] text-white/55 font-light leading-relaxed max-w-sm">
+              An AI that understands creative intent — not just commands.
+            </p>
+          </div>
+        </Scene>
 
-          {/* CTA row */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.75, duration: 0.6, ease }}
-            className="pl-8 mt-9 flex items-center gap-4"
-          >
-            <button className="text-[13px] font-semibold bg-black text-white rounded-full px-7 py-3 hover:bg-zinc-800 transition-colors">
-              Get started
-            </button>
-            <button className="text-[13px] font-medium text-black/60 hover:text-black transition-colors flex items-center gap-1.5">
-              See how it works
-              <span className="text-[10px]">→</span>
-            </button>
-          </motion.div>
-        </motion.div>
+        {/* 2 — Build */}
+        <Scene progress={scrollYProgress} range={[0.47, 0.53, 0.65, 0.71]}>
+          <div className="max-w-xl text-white">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-white/35 mb-4">02 / Build</p>
+            <h2 className="text-[clamp(36px,6vw,72px)] font-black leading-[1.0] tracking-tight">
+              Ship at the<br />speed of thought.
+            </h2>
+            <p className="mt-5 text-[1.05rem] text-white/55 font-light leading-relaxed max-w-sm">
+              From idea to production in a single, fluid workflow.
+            </p>
+          </div>
+        </Scene>
 
-        {/* scroll hint */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.3, duration: 0.8 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
-        >
-          <motion.div
-            animate={{ y: [0, 7, 0] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-            className="w-[1px] h-10 bg-black/20"
-          />
-          <span className="text-[10px] tracking-[0.15em] uppercase text-black/30">Scroll</span>
-        </motion.div>
-      </section>
+        {/* 3 — Evolve */}
+        <Scene progress={scrollYProgress} range={[0.70, 0.76, 0.88, 0.93]}>
+          <div className="max-w-xl text-white">
+            <p className="text-[10px] tracking-[0.22em] uppercase text-white/35 mb-4">03 / Evolve</p>
+            <h2 className="text-[clamp(36px,6vw,72px)] font-black leading-[1.0] tracking-tight">
+              It learns<br />as you create.
+            </h2>
+            <p className="mt-5 text-[1.05rem] text-white/55 font-light leading-relaxed max-w-sm">
+              Vorn adapts to your style, your stack, your voice.
+            </p>
+          </div>
+        </Scene>
 
-      {/* ── STATS ── */}
-      <section className="px-7 py-28 border-t border-black/8">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
-          variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-10"
-        >
-          {[
-            { value: "10×", label: "faster iteration" },
-            { value: "99.9%", label: "uptime" },
-            { value: "<50ms", label: "response time" },
-            { value: "∞", label: "creativity" },
-          ].map(({ value, label }) => (
-            <motion.div
-              key={label}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } },
-              }}
+        {/* 4 — CTA */}
+        <Scene progress={scrollYProgress} range={[0.93, 0.97, 1, 1]}>
+          <div className="text-center text-white">
+            <h2
+              className="font-black leading-[0.88] tracking-tight"
+              style={{ fontSize: "clamp(52px, 10vw, 140px)" }}
             >
-              <p className="text-4xl font-black tracking-tight">{value}</p>
-              <p className="text-sm text-zinc-500 mt-1">{label}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* ── FEATURES ── */}
-      <section className="px-7 py-24 bg-black text-white overflow-hidden">
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
-          className="grid md:grid-cols-3 gap-px bg-white/10"
-        >
-          {[
-            {
-              tag: "01 / Craft",
-              title: "Design without limits",
-              body: "An AI that understands creative intent — not just commands.",
-            },
-            {
-              tag: "02 / Build",
-              title: "Ship at the speed of thought",
-              body: "From idea to production in a single, fluid workflow.",
-            },
-            {
-              tag: "03 / Evolve",
-              title: "It learns as you create",
-              body: "Vorn adapts to your style, your stack, your voice.",
-            },
-          ].map(({ tag, title, body }) => (
-            <motion.div
-              key={tag}
-              variants={{
-                hidden: { opacity: 0, y: 30 },
-                visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },
-              }}
-              className="p-10 bg-black hover:bg-zinc-900 transition-colors"
-            >
-              <p className="text-[11px] tracking-[0.14em] uppercase text-zinc-500 mb-6">{tag}</p>
-              <h3 className="text-2xl font-bold leading-snug mb-3">{title}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">{body}</p>
-            </motion.div>
-          ))}
-        </motion.div>
-      </section>
-
-      {/* ── FOOTER CTA ── */}
-      <section className="px-7 py-36 flex flex-col items-center text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, ease }}
-        >
-          <p className="text-[11px] tracking-[0.15em] uppercase text-black/40 mb-5">Ready?</p>
-          <h2
-            className="font-black leading-[0.9] tracking-tight mb-10"
-            style={{ fontSize: "clamp(48px, 10vw, 140px)" }}
-          >
-            Start crafting.
-          </h2>
-          <button className="text-[13px] font-semibold bg-black text-white rounded-full px-8 py-3.5 hover:bg-zinc-800 transition-colors">
-            Create free account →
-          </button>
-        </motion.div>
-      </section>
-
-      {/* ── FOOTER BAR ── */}
-      <div className="px-7 py-5 border-t border-black/8 flex items-center justify-between">
-        <span className="text-[11px] font-semibold tracking-[0.1em] uppercase">vorn</span>
-        <span className="text-[11px] text-zinc-400">© 2026 Vorn</span>
+              Start<br />crafting.
+            </h2>
+            <p className="mt-5 text-white/50 text-[1rem] font-light">
+              Join thousands of builders on Vorn.
+            </p>
+            <button className="pointer-events-auto mt-9 text-[13px] font-semibold bg-white text-black rounded-full px-9 py-3.5 hover:bg-white/90 transition-colors">
+              Create free account →
+            </button>
+          </div>
+        </Scene>
       </div>
 
+      {/* ── SCROLL HINT ── */}
+      <motion.div
+        style={{ opacity: hintOpacity }}
+        className="fixed bottom-12 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
+      >
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 1.7, ease: "easeInOut" }}
+          className="w-[1px] h-9 bg-white/25"
+        />
+        <span className="text-[9px] tracking-[0.18em] uppercase text-white/25">Scroll</span>
+      </motion.div>
+
+      {/* ── PROGRESS BAR ── */}
+      <motion.div
+        className="fixed bottom-0 left-0 right-0 h-[1.5px] bg-white/50 z-50 origin-left"
+        style={{ scaleX: barScaleX }}
+      />
     </div>
   );
 }
