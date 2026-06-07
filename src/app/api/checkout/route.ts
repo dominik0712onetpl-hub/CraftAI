@@ -1,27 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 
-const VARIANTS: Record<string, { name: string; price: number }> = {
-  standard: { name: "Vorn Standard", price: 29900 },
-  pro:      { name: "Vorn Pro",      price: 39900 },
+const VARIANT_NAMES: Record<string, string> = {
+  standard: "Vorn Standard",
+  pro: "Vorn Pro",
 };
 
 const COLOR_NAMES: Record<string, string> = {
   midnight: "Midnight Black",
-  pearl:    "Pearl White",
-  sage:     "Sage",
+  pearl: "Pearl White",
+  sage: "Sage",
 };
 
 export async function POST(req: NextRequest) {
   try {
     const secretKey = process.env.STRIPE_SECRET_KEY;
-    if (!secretKey) return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+    if (!secretKey) {
+      return NextResponse.json({ error: "Stripe not configured" }, { status: 503 });
+    }
 
     const stripe = new Stripe(secretKey);
-    const { variantId, colorId, qty } = await req.json();
-
-    const variant = VARIANTS[variantId] ?? VARIANTS.standard;
-    const colorName = COLOR_NAMES[colorId] ?? colorId;
+    const { variantId, colorId, qty, currency, unitAmount } = await req.json();
 
     const baseUrl =
       process.env.NEXT_PUBLIC_BASE_URL ??
@@ -32,12 +31,12 @@ export async function POST(req: NextRequest) {
       line_items: [
         {
           price_data: {
-            currency: "eur",
+            currency: currency ?? "eur",
             product_data: {
-              name: variant.name,
-              description: `Color: ${colorName} · Real-time AI translation earbuds`,
+              name: VARIANT_NAMES[variantId] ?? "Vorn Earbuds",
+              description: `Color: ${COLOR_NAMES[colorId] ?? colorId}`,
             },
-            unit_amount: variant.price,
+            unit_amount: unitAmount,
           },
           quantity: qty,
         },

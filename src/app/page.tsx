@@ -317,7 +317,7 @@ export default function Home() {
       </section>
 
       {/* ── PURCHASE ── */}
-      <PurchasePanel t={t} />
+      <PurchasePanel t={t} lang={lang} />
 
       {/* ── FOOTER ── */}
       <footer className="px-7 py-6 border-t border-black/8 flex items-center justify-between">

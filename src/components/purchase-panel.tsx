@@ -2,20 +2,21 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import type { T } from "@/lib/translations";
+import { PRICING, formatPrice, type T, type Lang } from "@/lib/translations";
 
 type State = "idle" | "submitting" | "success";
 
-export function PurchasePanel({ t }: { t: T }) {
+export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
   const p = t.purchase;
-  const [variantId, setVariantId] = useState(p.variants[0].id);
+  const pricing = PRICING[lang];
+
+  const [variantId, setVariantId] = useState<"standard" | "pro">("standard");
   const [colorId, setColorId] = useState(p.colors[0].id);
   const [qty, setQty] = useState(1);
   const [state, setState] = useState<State>("idle");
 
-  const variant = p.variants.find((v) => v.id === variantId)!;
-  const color = p.colors.find((c) => c.id === colorId)!;
-  const total = variant.price * qty;
+  const variantPrice = pricing[variantId];
+  const total = variantPrice * qty;
 
   const handleOrder = async () => {
     setState("submitting");
@@ -23,7 +24,13 @@ export function PurchasePanel({ t }: { t: T }) {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ variantId, colorId, qty }),
+        body: JSON.stringify({
+          variantId,
+          colorId,
+          qty,
+          currency: pricing.currency,
+          unitAmount: variantPrice * 100,
+        }),
       });
       const data = await res.json();
       if (data.url) {
@@ -35,6 +42,8 @@ export function PurchasePanel({ t }: { t: T }) {
       setState("idle");
     }
   };
+
+  const color = p.colors.find((c) => c.id === colorId)!;
 
   return (
     <section id="order" className="bg-[#f2efe9] py-28 px-6">
@@ -77,31 +86,34 @@ export function PurchasePanel({ t }: { t: T }) {
               transition={{ duration: 0.5 }}
               className="grid md:grid-cols-2 gap-12 items-start"
             >
-              {/* Left: product summary */}
+              {/* Left */}
               <div>
                 <p className="text-[11px] tracking-[0.18em] uppercase text-black/35 mb-3">Vorn</p>
                 <h2 className="text-4xl font-black mb-1">{p.title}</h2>
                 <p className="text-sm text-zinc-500 mb-8">{p.sub}</p>
 
-                {/* Variant */}
+                {/* Variants */}
                 <div className="space-y-3 mb-8">
-                  {p.variants.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => setVariantId(v.id)}
-                      className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all duration-200 ${
-                        variantId === v.id
-                          ? "border-black bg-white"
-                          : "border-transparent bg-white/60 hover:bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm">{v.name}</span>
-                        <span className="font-black text-base">€{v.price}</span>
-                      </div>
-                      <p className="text-xs text-zinc-400 mt-0.5">{v.desc}</p>
-                    </button>
-                  ))}
+                  {p.variants.map((v) => {
+                    const vPrice = pricing[v.id as "standard" | "pro"];
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => setVariantId(v.id as "standard" | "pro")}
+                        className={`w-full text-left px-5 py-4 rounded-2xl border-2 transition-all duration-200 ${
+                          variantId === v.id
+                            ? "border-black bg-white"
+                            : "border-transparent bg-white/60 hover:bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-sm">{v.name}</span>
+                          <span className="font-black text-base">{formatPrice(vPrice, lang)}</span>
+                        </div>
+                        <p className="text-xs text-zinc-400 mt-0.5">{v.desc}</p>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Color */}
@@ -125,25 +137,21 @@ export function PurchasePanel({ t }: { t: T }) {
                 </div>
               </div>
 
-              {/* Right: qty + buy */}
+              {/* Right */}
               <div className="md:pt-14">
                 {/* Quantity */}
                 <div className="mb-8">
                   <p className="text-xs font-medium text-zinc-500 mb-3">{p.qty}</p>
-                  <div className="inline-flex items-center gap-0 bg-white rounded-full border border-black/10 overflow-hidden">
+                  <div className="inline-flex items-center bg-white rounded-full border border-black/10 overflow-hidden">
                     <button
                       onClick={() => setQty((q) => Math.max(1, q - 1))}
                       className="w-10 h-10 flex items-center justify-center text-lg font-light hover:bg-black/5 transition-colors"
-                    >
-                      −
-                    </button>
+                    >−</button>
                     <span className="w-10 text-center text-sm font-semibold select-none">{qty}</span>
                     <button
                       onClick={() => setQty((q) => Math.min(9, q + 1))}
                       className="w-10 h-10 flex items-center justify-center text-lg font-light hover:bg-black/5 transition-colors"
-                    >
-                      +
-                    </button>
+                    >+</button>
                   </div>
                 </div>
 
@@ -156,7 +164,7 @@ export function PurchasePanel({ t }: { t: T }) {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-3xl font-black"
                   >
-                    €{total}
+                    {formatPrice(total, lang)}
                   </motion.span>
                 </div>
 
@@ -174,7 +182,7 @@ export function PurchasePanel({ t }: { t: T }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 flex items-center justify-center gap-2"
+                        className="absolute inset-0 flex items-center justify-center"
                       >
                         <motion.span
                           animate={{ rotate: 360 }}
@@ -184,13 +192,11 @@ export function PurchasePanel({ t }: { t: T }) {
                       </motion.span>
                     ) : (
                       <motion.span key="label" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        {p.buy} — €{total}
+                        {p.buy} — {formatPrice(total, lang)}
                       </motion.span>
                     )}
                   </AnimatePresence>
                 </motion.button>
-
-                <p className="text-center text-[10px] text-black/30 mt-3 tracking-wide">{p.demo}</p>
               </div>
             </motion.div>
           )}

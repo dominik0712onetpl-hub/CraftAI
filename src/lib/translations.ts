@@ -1,5 +1,23 @@
 export type Lang = "en" | "pl" | "de" | "no";
 
+export const PRICING: Record<Lang, {
+  currency: string;
+  symbol: string;
+  symbolAfter: boolean;
+  standard: number;
+  pro: number;
+}> = {
+  pl: { currency: "pln", symbol: "zł", symbolAfter: true,  standard: 399,  pro: 529  },
+  en: { currency: "eur", symbol: "€",  symbolAfter: false, standard: 89,   pro: 119  },
+  de: { currency: "eur", symbol: "€",  symbolAfter: false, standard: 89,   pro: 119  },
+  no: { currency: "nok", symbol: "kr", symbolAfter: true,  standard: 999,  pro: 1299 },
+};
+
+export function formatPrice(amount: number, lang: Lang): string {
+  const { symbol, symbolAfter } = PRICING[lang];
+  return symbolAfter ? `${amount} ${symbol}` : `${symbol}${amount}`;
+}
+
 export function detectLang(): Lang {
   if (typeof navigator === "undefined") return "en";
   const l = navigator.language.toLowerCase();
@@ -64,8 +82,8 @@ const en = {
     title: "Order Vorn",
     sub: "Free worldwide shipping · 30-day returns",
     variants: [
-      { id: "standard", name: "Standard", price: 299, desc: "40 languages · 6 h battery · ANC · Charging case" },
-      { id: "pro", name: "Pro", price: 399, desc: "40+ languages · 8 h battery · ANC Pro · Premium leather case · Priority support" },
+      { id: "standard", name: "Standard", desc: "40 languages · 6 h battery · ANC · Charging case" },
+      { id: "pro", name: "Pro", desc: "40+ languages · 8 h battery · ANC Pro · Premium leather case · Priority support" },
     ],
     colors: [
       { id: "midnight", name: "Midnight Black", hex: "#181818" },
@@ -75,7 +93,6 @@ const en = {
     qty: "Quantity",
     total: "Total",
     buy: "Order now",
-    demo: "Demo mode — no real payment is processed",
     success: {
       h: "Order received!",
       b: "In production you'd receive an order confirmation by e-mail. Thank you for trying Vorn.",
@@ -140,8 +157,8 @@ const pl: typeof en = {
     title: "Zamów Vorn",
     sub: "Bezpłatna wysyłka na cały świat · 30 dni na zwrot",
     variants: [
-      { id: "standard", name: "Standard", price: 299, desc: "40 języków · 6 h bateria · ANC · Etui ładujące" },
-      { id: "pro", name: "Pro", price: 399, desc: "40+ języków · 8 h bateria · ANC Pro · Skórzane etui premium · Wsparcie priorytetowe" },
+      { id: "standard", name: "Standard", desc: "40 języków · 6 h bateria · ANC · Etui ładujące" },
+      { id: "pro", name: "Pro", desc: "40+ języków · 8 h bateria · ANC Pro · Skórzane etui premium · Wsparcie priorytetowe" },
     ],
     colors: [
       { id: "midnight", name: "Czarna północ", hex: "#181818" },
@@ -151,7 +168,6 @@ const pl: typeof en = {
     qty: "Ilość",
     total: "Łącznie",
     buy: "Zamów teraz",
-    demo: "Tryb demo — płatność nie jest przetwarzana",
     success: {
       h: "Zamówienie przyjęte!",
       b: "W wersji produkcyjnej otrzymasz potwierdzenie zamówienia e-mailem. Dziękujemy za wypróbowanie Vorn.",
@@ -216,8 +232,8 @@ const de: typeof en = {
     title: "Vorn bestellen",
     sub: "Kostenloser weltweiter Versand · 30 Tage Rückgabe",
     variants: [
-      { id: "standard", name: "Standard", price: 299, desc: "40 Sprachen · 6 h Akku · ANC · Ladecase" },
-      { id: "pro", name: "Pro", price: 399, desc: "40+ Sprachen · 8 h Akku · ANC Pro · Premium-Ledercase · Priority-Support" },
+      { id: "standard", name: "Standard", desc: "40 Sprachen · 6 h Akku · ANC · Ladecase" },
+      { id: "pro", name: "Pro", desc: "40+ Sprachen · 8 h Akku · ANC Pro · Premium-Ledercase · Priority-Support" },
     ],
     colors: [
       { id: "midnight", name: "Mitternachtsschwarz", hex: "#181818" },
@@ -227,7 +243,6 @@ const de: typeof en = {
     qty: "Menge",
     total: "Gesamt",
     buy: "Jetzt bestellen",
-    demo: "Demo-Modus — keine echte Zahlung wird verarbeitet",
     success: {
       h: "Bestellung eingegangen!",
       b: "In der Produktion würdest du eine Bestellbestätigung per E-Mail erhalten. Danke, dass du Vorn ausprobierst.",
@@ -292,8 +307,8 @@ const no: typeof en = {
     title: "Bestill Vorn",
     sub: "Gratis frakt over hele verden · 30 dagers retur",
     variants: [
-      { id: "standard", name: "Standard", price: 299, desc: "40 språk · 6 t batteri · ANC · Ladeetui" },
-      { id: "pro", name: "Pro", price: 399, desc: "40+ språk · 8 t batteri · ANC Pro · Premium lær-etui · Prioritetsstøtte" },
+      { id: "standard", name: "Standard", desc: "40 språk · 6 t batteri · ANC · Ladeetui" },
+      { id: "pro", name: "Pro", desc: "40+ språk · 8 t batteri · ANC Pro · Premium lær-etui · Prioritetsstøtte" },
     ],
     colors: [
       { id: "midnight", name: "Midnattssvart", hex: "#181818" },
@@ -303,7 +318,6 @@ const no: typeof en = {
     qty: "Antall",
     total: "Totalt",
     buy: "Bestill nå",
-    demo: "Demo-modus — ingen ekte betaling behandles",
     success: {
       h: "Bestilling mottatt!",
       b: "I produksjon ville du mottatt en ordrebekreftelse på e-post. Takk for at du prøver Vorn.",
