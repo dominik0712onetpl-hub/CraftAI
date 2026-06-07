@@ -69,6 +69,23 @@ export default function Home() {
     offset: ["start start", "end end"],
   });
 
+  /* Unlock video for programmatic seeking — browsers block currentTime
+     until the video has been started at least once.                    */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const unlock = () => {
+      v.play()
+        .then(() => { v.pause(); v.currentTime = 0; })
+        .catch(() => {});
+    };
+    if (v.readyState >= 2) {
+      unlock();
+    } else {
+      v.addEventListener("loadeddata", unlock, { once: true });
+    }
+  }, []);
+
   useMotionValueEvent(scrollYProgress, "change", (p) => {
     const v = videoRef.current;
     if (!v || !v.duration || isNaN(v.duration)) return;
