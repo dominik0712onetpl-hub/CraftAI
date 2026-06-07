@@ -171,12 +171,12 @@ export default function Home() {
               >
                 {t.hero.tag}
               </motion.p>
-              <div className="overflow-hidden">
+              <div className="overflow-hidden pb-[0.25em]">
                 <motion.h1
                   initial={{ y: "100%" }}
                   animate={{ y: 0 }}
                   transition={{ duration: 0.95, ease }}
-                  className="font-black leading-[0.85] tracking-[-0.03em] whitespace-pre-line"
+                  className="font-black leading-[0.95] tracking-[-0.03em] whitespace-pre-line"
                   style={{ fontSize: "clamp(52px, 10vw, 130px)" }}
                 >
                   {t.hero.h1}

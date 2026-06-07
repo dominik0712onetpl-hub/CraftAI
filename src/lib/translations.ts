@@ -89,7 +89,7 @@ const pl: typeof en = {
   nav: { brand: "vorn", buy: "Zamów teraz" },
   hero: {
     tag: "Tłumaczenie w czasie rzeczywistym",
-    h1: "Słyszysz świat\nwe własnym języku.",
+    h1: "Usłysz świat\nwe własnym języku.",
     sub: "Bezprzewodowe słuchawki z błyskawicznym tłumaczeniem AI w ponad 40 językach. Stworzone do podróży, biznesu i życia.",
     cta: "Zamów teraz",
     scroll: "Przewiń",
