@@ -10,10 +10,16 @@ import {
 } from "@stripe/react-stripe-js";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatPrice, type Lang, type T } from "@/lib/translations";
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
 import type { StripeElementLocale } from "@stripe/stripe-js";
+
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+
+/* loadStripe only when a valid publishable key was inlined at build time.
+   Otherwise stay null so we can show a clear message instead of failing silently. */
+const stripePromise =
+  PUBLISHABLE_KEY && PUBLISHABLE_KEY.startsWith("pk_")
+    ? loadStripe(PUBLISHABLE_KEY)
+    : null;
 
 const STRIPE_LOCALE: Record<Lang, StripeElementLocale> = {
   en: "en",
@@ -220,9 +226,16 @@ export function PaymentModal({
           <p className="text-sm text-zinc-400 font-medium">{formatPrice(total, lang)}</p>
         </div>
 
-        <Elements stripe={stripePromise} options={elementsOptions}>
-          <CheckoutForm t={t} total={total} lang={lang} onSuccess={onSuccess} />
-        </Elements>
+        {stripePromise ? (
+          <Elements stripe={stripePromise} options={elementsOptions}>
+            <CheckoutForm t={t} total={total} lang={lang} onSuccess={onSuccess} />
+          </Elements>
+        ) : (
+          <p className="text-sm text-red-500 leading-relaxed">
+            Brak NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY w buildzie. Ustaw klucz pk_ w Vercel
+            (Production + Preview) i wykonaj nowy deploy.
+          </p>
+        )}
       </motion.div>
     </motion.div>
   );
