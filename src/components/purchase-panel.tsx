@@ -19,8 +19,21 @@ export function PurchasePanel({ t }: { t: T }) {
 
   const handleOrder = async () => {
     setState("submitting");
-    await new Promise((r) => setTimeout(r, 1800));
-    setState("success");
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ variantId, colorId, qty }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setState("idle");
+      }
+    } catch {
+      setState("idle");
+    }
   };
 
   return (
