@@ -129,6 +129,18 @@ const en = {
       },
     ],
   },
+  delivery: {
+    title: "Delivery method",
+    free: "Free",
+    pointLabel: "Paczkomat® code",
+    pointPlaceholder: "e.g. WAW01M",
+    pointHelp: "Find nearest Paczkomat ↗",
+    pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
+    pointMissing: "Please enter your Paczkomat® code.",
+    options: [
+      { id: "courier", name: "Tracked courier", eta: "3–5 business days", requiresPoint: false },
+    ],
+  },
   purchase: {
     title: "Order Vorn",
     sub: "Free worldwide shipping · 30-day returns · 2-year warranty",
@@ -273,6 +285,19 @@ const pl: typeof en = {
         q: "Z jakimi telefonami jest kompatybilny?",
         a: "Vorn łączy się przez Bluetooth 5.4 z każdym smartfonem iOS 16+ lub Android 10+. Bezpłatna aplikacja Vorn dostępna jest w App Store i Google Play.",
       },
+    ],
+  },
+  delivery: {
+    title: "Sposób dostawy",
+    free: "Gratis",
+    pointLabel: "Kod Paczkomatu®",
+    pointPlaceholder: "np. WAW01M",
+    pointHelp: "Znajdź najbliższy Paczkomat ↗",
+    pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
+    pointMissing: "Podaj kod Paczkomatu®.",
+    options: [
+      { id: "inpost_paczkomat", name: "InPost Paczkomat®", eta: "1–2 dni robocze", requiresPoint: true },
+      { id: "inpost_kurier", name: "Kurier InPost", eta: "1–2 dni robocze", requiresPoint: false },
     ],
   },
   purchase: {
@@ -421,6 +446,18 @@ const de: typeof en = {
       },
     ],
   },
+  delivery: {
+    title: "Versandart",
+    free: "Kostenlos",
+    pointLabel: "Paczkomat®-Code",
+    pointPlaceholder: "z. B. WAW01M",
+    pointHelp: "Nächsten Paczkomat finden ↗",
+    pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
+    pointMissing: "Bitte gib deinen Paczkomat®-Code ein.",
+    options: [
+      { id: "dhl", name: "DHL Paket", eta: "1–3 Werktage", requiresPoint: false },
+    ],
+  },
   purchase: {
     title: "Vorn bestellen",
     sub: "Kostenloser Versand · 30 Tage Rückgabe · 2 Jahre Garantie",
@@ -565,6 +602,18 @@ const no: typeof en = {
         q: "Hvilke telefoner er kompatible?",
         a: "Vorn kobler seg til via Bluetooth 5.4 til alle iOS 16+- eller Android 10+-smarttelefoner. Den gratis Vorn-appen er tilgjengelig i App Store og Google Play.",
       },
+    ],
+  },
+  delivery: {
+    title: "Leveringsmetode",
+    free: "Gratis",
+    pointLabel: "Paczkomat®-kode",
+    pointPlaceholder: "f.eks. WAW01M",
+    pointHelp: "Finn nærmeste Paczkomat ↗",
+    pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
+    pointMissing: "Skriv inn Paczkomat®-koden din.",
+    options: [
+      { id: "bring", name: "Bring / Posten", eta: "2–4 virkedager", requiresPoint: false },
     ],
   },
   purchase: {

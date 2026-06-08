@@ -5,6 +5,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
   PaymentElement,
+  AddressElement,
   useStripe,
   useElements,
 } from "@stripe/react-stripe-js";
@@ -68,6 +69,13 @@ function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
+      <AddressElement
+        options={{
+          mode: "shipping",
+          fields: { phone: "always" },
+          validation: { phone: { required: "always" } },
+        }}
+      />
       <PaymentElement
         options={{
           layout: "tabs",
@@ -129,6 +137,7 @@ interface PaymentModalProps {
   total: number;
   lang: Lang;
   t: T;
+  deliveryLabel?: string;
   onClose: () => void;
   onSuccess: () => void;
 }
@@ -138,6 +147,7 @@ export function PaymentModal({
   total,
   lang,
   t,
+  deliveryLabel,
   onClose,
   onSuccess,
 }: PaymentModalProps) {
@@ -224,6 +234,9 @@ export function PaymentModal({
           <p className="text-[10px] tracking-[0.2em] uppercase text-black/30 mb-1">Vorn</p>
           <h3 className="text-2xl font-black mb-0.5">{t.modal.title}</h3>
           <p className="text-sm text-zinc-400 font-medium">{formatPrice(total, lang)}</p>
+          {deliveryLabel && (
+            <p className="text-xs text-zinc-400 mt-1">{deliveryLabel}</p>
+          )}
         </div>
 
         {stripePromise ? (

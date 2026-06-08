@@ -23,7 +23,15 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = new Stripe(secretKey);
-    const { variantId, colorId, qty, currency, unitAmount } = await req.json();
+    const {
+      colorId,
+      qty,
+      currency,
+      unitAmount,
+      shippingMethod,
+      shippingEta,
+      paczkomat,
+    } = await req.json();
 
     if (!unitAmount || unitAmount < 1) {
       return NextResponse.json({ error: "Nieprawidłowa kwota." }, { status: 400 });
@@ -34,9 +42,12 @@ export async function POST(req: NextRequest) {
       currency: currency ?? "eur",
       automatic_payment_methods: { enabled: true },
       metadata: {
-        variantId: variantId ?? "",
+        product: PRODUCT_NAME,
         colorId: colorId ?? "",
         qty: String(qty ?? 1),
+        shippingMethod: shippingMethod ?? "",
+        shippingEta: shippingEta ?? "",
+        paczkomat: paczkomat ?? "",
       },
     });
 

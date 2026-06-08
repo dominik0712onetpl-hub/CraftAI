@@ -47,11 +47,25 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const [agreed, setAgreed] = useState(false);
+  const [deliveryId, setDeliveryId] = useState("");
+  const [paczkomat, setPaczkomat] = useState("");
 
   const total = pricing.price * qty;
   const color = p.colors.find((c) => c.id === colorId)!;
 
+  // Fall back to the first option (delivery ids differ per language)
+  const delivery =
+    t.delivery.options.find((o) => o.id === deliveryId) ?? t.delivery.options[0];
+  const needsPoint = delivery.requiresPoint;
+  const deliveryLabel = needsPoint
+    ? `${delivery.name} · ${paczkomat.toUpperCase()}`
+    : delivery.name;
+
   const handleOrder = async () => {
+    if (needsPoint && !paczkomat.trim()) {
+      setApiError(t.delivery.pointMissing);
+      return;
+    }
     if (!agreed) {
       setApiError(p.legal.agree + " " + p.legal.terms + " " + p.legal.and + " " + p.legal.privacy + ".");
       return;
@@ -63,11 +77,13 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          variantId: "standard",
           colorId,
           qty,
           currency: pricing.currency,
           unitAmount: pricing.price * 100,
+          shippingMethod: delivery.name,
+          shippingEta: delivery.eta,
+          paczkomat: needsPoint ? paczkomat.trim().toUpperCase() : "",
         }),
       });
       const data = await res.json();
@@ -164,6 +180,61 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
 
                 {/* Right */}
                 <div className="md:pt-14">
+                  {/* Delivery method */}
+                  <div className="mb-8">
+                    <p className="text-xs font-medium text-zinc-500 mb-3">{t.delivery.title}</p>
+                    <div className="space-y-2">
+                      {t.delivery.options.map((o) => (
+                        <button
+                          key={o.id}
+                          onClick={() => setDeliveryId(o.id)}
+                          className={`w-full text-left px-4 py-3 rounded-xl border-2 transition-all duration-200 ${
+                            delivery.id === o.id
+                              ? "border-black bg-white"
+                              : "border-transparent bg-white/60 hover:bg-white"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-sm">{o.name}</span>
+                            <span className="text-xs font-semibold text-zinc-500">{t.delivery.free}</span>
+                          </div>
+                          <p className="text-xs text-zinc-400 mt-0.5">{o.eta}</p>
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Paczkomat code (InPost only) */}
+                    <AnimatePresence initial={false}>
+                      {needsPoint && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="pt-3">
+                            <input
+                              value={paczkomat}
+                              onChange={(e) => { setPaczkomat(e.target.value); setApiError(null); }}
+                              placeholder={t.delivery.pointPlaceholder}
+                              aria-label={t.delivery.pointLabel}
+                              className="w-full bg-white rounded-xl border border-black/10 px-4 py-3 text-sm uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-400 focus:border-black focus:outline-none transition-colors"
+                            />
+                            <a
+                              href={t.delivery.pointHelpUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block mt-2 text-[11px] text-zinc-400 hover:text-black transition-colors underline underline-offset-2"
+                            >
+                              {t.delivery.pointHelp}
+                            </a>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
                   {/* Quantity */}
                   <div className="mb-8">
                     <p className="text-xs font-medium text-zinc-500 mb-3">{p.qty}</p>
@@ -284,6 +355,7 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
             total={total}
             lang={lang}
             t={t}
+            deliveryLabel={deliveryLabel}
             onClose={() => setState("idle")}
             onSuccess={() => { setClientSecret(null); setState("success"); }}
           />
