@@ -5,6 +5,173 @@ import { motion, AnimatePresence } from "framer-motion";
 import { PRICING, formatPrice, type T, type Lang } from "@/lib/translations";
 import { PaymentModal } from "@/components/payment-modal";
 
+// ─── InPost Geowidget ───────────────────────────────────────────────────────
+
+declare global {
+  interface Window {
+    easyPack?: {
+      init(options: Record<string, unknown>): void;
+      modalMap(
+        cb: (point: { name: string }, modal: { closeModal(): void }) => void,
+        options?: { width?: number; height?: number }
+      ): void;
+    };
+    easyPackAsyncInit?(): void;
+  }
+}
+
+const GEO_CSS = "https://geowidget.inpost.pl/inpost-geopicker.css";
+const GEO_JS  = "https://geowidget.inpost.pl/inpost-geopicker.js";
+
+let geoReady: Promise<void> | null = null;
+
+function ensureGeoWidget(): Promise<void> {
+  if (geoReady) return geoReady;
+
+  geoReady = new Promise<void>((resolve, reject) => {
+    if (!document.querySelector(`link[href="${GEO_CSS}"]`)) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = GEO_CSS;
+      document.head.appendChild(link);
+    }
+
+    window.easyPackAsyncInit = () => {
+      const token = process.env.NEXT_PUBLIC_INPOST_GEO_TOKEN;
+      window.easyPack!.init({
+        defaultLocale: "pl",
+        mapType: "osm",
+        searchType: "osm",
+        ...(token ? { token } : {}),
+        points: { types: ["parcel_locker"] },
+        display: { showTypesFilters: false, showSearchBar: true },
+      });
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.src = GEO_JS;
+    script.async = true;
+    script.onerror = () => reject(new Error("GeoWidget load error"));
+    document.head.appendChild(script);
+  });
+
+  return geoReady;
+}
+
+function PaczkomatPicker({
+  value,
+  onChange,
+  labels,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  labels: {
+    mapBtn: string;
+    change: string;
+    manual: string;
+    placeholder: string;
+    pointLabel: string;
+  };
+}) {
+  const [mode, setMode] = useState<"map" | "manual">("map");
+  const [opening, setOpening] = useState(false);
+  const [geoFailed, setGeoFailed] = useState(false);
+
+  const openMap = async () => {
+    setOpening(true);
+    setGeoFailed(false);
+    try {
+      await ensureGeoWidget();
+      window.easyPack!.modalMap((point, modal) => {
+        modal.closeModal();
+        onChange(point.name);
+      }, { width: 500, height: 600 });
+    } catch {
+      geoReady = null;
+      setGeoFailed(true);
+      setMode("manual");
+    } finally {
+      setOpening(false);
+    }
+  };
+
+  if (mode === "manual") {
+    return (
+      <div className="pt-3 space-y-1.5">
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={labels.placeholder}
+          aria-label={labels.pointLabel}
+          className="w-full bg-white rounded-xl border border-black/10 px-4 py-3 text-sm uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-400 focus:border-black focus:outline-none transition-colors"
+        />
+        {!geoFailed && (
+          <button
+            type="button"
+            onClick={() => setMode("map")}
+            className="text-[11px] text-zinc-400 hover:text-black transition-colors underline underline-offset-2"
+          >
+            ← {labels.mapBtn}
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="pt-3 space-y-1.5">
+      {value ? (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center gap-3 bg-white rounded-xl border-2 border-black px-4 py-3">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="flex-shrink-0">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span className="text-sm font-mono font-bold tracking-widest">{value}</span>
+          </div>
+          <button
+            type="button"
+            onClick={openMap}
+            disabled={opening}
+            className="px-3 py-3 text-xs font-medium text-zinc-500 hover:text-black transition-colors bg-white rounded-xl border border-black/10 hover:border-black/30 disabled:opacity-50"
+          >
+            {labels.change}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={openMap}
+          disabled={opening}
+          className="w-full flex items-center justify-center gap-2.5 bg-white rounded-xl border-2 border-dashed border-black/20 hover:border-black/50 px-4 py-3.5 text-sm font-medium text-zinc-500 hover:text-black transition-all disabled:opacity-60"
+        >
+          {opening ? (
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 0.9, ease: "linear" }}
+              className="w-4 h-4 border-2 border-black/20 border-t-black/70 rounded-full inline-block"
+            />
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+          )}
+          {labels.mapBtn}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={() => setMode("manual")}
+        className="text-[11px] text-zinc-400 hover:text-black transition-colors underline underline-offset-2"
+      >
+        {labels.manual}
+      </button>
+    </div>
+  );
+}
+
 type State = "idle" | "loading" | "modal" | "success";
 
 function TrustBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
@@ -203,7 +370,7 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                       ))}
                     </div>
 
-                    {/* Paczkomat code (InPost only) */}
+                    {/* Paczkomat picker (InPost only) */}
                     <AnimatePresence initial={false}>
                       {needsPoint && (
                         <motion.div
@@ -213,23 +380,17 @@ export function PurchasePanel({ t, lang }: { t: T; lang: Lang }) {
                           transition={{ duration: 0.25 }}
                           className="overflow-hidden"
                         >
-                          <div className="pt-3">
-                            <input
-                              value={paczkomat}
-                              onChange={(e) => { setPaczkomat(e.target.value); setApiError(null); }}
-                              placeholder={t.delivery.pointPlaceholder}
-                              aria-label={t.delivery.pointLabel}
-                              className="w-full bg-white rounded-xl border border-black/10 px-4 py-3 text-sm uppercase tracking-wide placeholder:normal-case placeholder:tracking-normal placeholder:text-zinc-400 focus:border-black focus:outline-none transition-colors"
-                            />
-                            <a
-                              href={t.delivery.pointHelpUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-block mt-2 text-[11px] text-zinc-400 hover:text-black transition-colors underline underline-offset-2"
-                            >
-                              {t.delivery.pointHelp}
-                            </a>
-                          </div>
+                          <PaczkomatPicker
+                            value={paczkomat}
+                            onChange={(v) => { setPaczkomat(v); setApiError(null); }}
+                            labels={{
+                              mapBtn: t.delivery.pointMapBtn,
+                              change: t.delivery.pointChange,
+                              manual: t.delivery.pointManual,
+                              placeholder: t.delivery.pointPlaceholder,
+                              pointLabel: t.delivery.pointLabel,
+                            }}
+                          />
                         </motion.div>
                       )}
                     </AnimatePresence>

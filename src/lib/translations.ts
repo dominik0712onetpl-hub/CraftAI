@@ -137,6 +137,9 @@ const en = {
     pointHelp: "Find nearest Paczkomat ↗",
     pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
     pointMissing: "Please enter your Paczkomat® code.",
+    pointMapBtn: "Choose Paczkomat on map",
+    pointChange: "Change",
+    pointManual: "Enter code manually",
     options: [
       { id: "courier", name: "Tracked courier", eta: "3–5 business days", requiresPoint: false },
     ],
@@ -295,6 +298,9 @@ const pl: typeof en = {
     pointHelp: "Znajdź najbliższy Paczkomat ↗",
     pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
     pointMissing: "Podaj kod Paczkomatu®.",
+    pointMapBtn: "Wybierz paczkomat na mapie",
+    pointChange: "Zmień",
+    pointManual: "Wpisz kod ręcznie",
     options: [
       { id: "inpost_paczkomat", name: "InPost Paczkomat®", eta: "1–2 dni robocze", requiresPoint: true },
       { id: "inpost_kurier", name: "Kurier InPost", eta: "1–2 dni robocze", requiresPoint: false },
@@ -454,6 +460,9 @@ const de: typeof en = {
     pointHelp: "Nächsten Paczkomat finden ↗",
     pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
     pointMissing: "Bitte gib deinen Paczkomat®-Code ein.",
+    pointMapBtn: "Paczkomat auf Karte wählen",
+    pointChange: "Ändern",
+    pointManual: "Code manuell eingeben",
     options: [
       { id: "dhl", name: "DHL Paket", eta: "1–3 Werktage", requiresPoint: false },
     ],
@@ -612,6 +621,9 @@ const no: typeof en = {
     pointHelp: "Finn nærmeste Paczkomat ↗",
     pointHelpUrl: "https://inpost.pl/znajdz-paczkomat",
     pointMissing: "Skriv inn Paczkomat®-koden din.",
+    pointMapBtn: "Velg pakkeboks på kart",
+    pointChange: "Endre",
+    pointManual: "Skriv inn kode manuelt",
     options: [
       { id: "bring", name: "Bring / Posten", eta: "2–4 virkedager", requiresPoint: false },
     ],
